@@ -15,12 +15,14 @@ class Location
 private:
 	strVector			_strings;
 	size_t				_start;
-	std::string			uri;
 	strVector			methods;
 	std::string*		redirect;
+	std::string			uri;
 	std::string			try_files;
 	std::string			locRoot;
+	std::string			cgi_path;
 	bool				autoindex;
+	int					max_body_size;
 
 
 	void		setValue(void);
@@ -29,6 +31,8 @@ private:
 	void		setRedirect(void);
 	void		setTryFiles(void);
 	void		setLocRoot(void);
+	void		setCGIPath(void);
+	void		setMaxBodySize(void);
 public:
 	Location(void);
 	Location(strVector strings, size_t start);
@@ -41,6 +45,8 @@ public:
 	std::string		&getUri(void);
 	std::string		&getTryFiles(void);
 	std::string		&getLocRoot(void);
+	std::string		&getCGIPath(void);
+	int				getMaxBodySize(void);
 };
 
 #endif

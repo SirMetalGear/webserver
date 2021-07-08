@@ -19,6 +19,7 @@ Config::~Config(void) { return; }
 Config::Config(std::string path_to_config)
 {
 	_strings = readFile(path_to_config);
+	checkValid();
 	if (countServers(_strings) == 0)
 		error_exit("Servers not found!");
 	for (size_t i = 0; i < _strings.size(); i++)
@@ -104,8 +105,46 @@ strVector	Config::readFile(std::string path)
 	}
 	else
 		error_exit("Cannot open config file!");
-	file = split(line, std::string(" \n\t;"));
+	file = split(line, std::string(" \n\t"));
  	return file;
+}
+
+void	Config::checkValid(void)
+{
+	for (size_t i = 0; i < _strings.size(); i++)
+	{
+		if (_strings[i].compare(0, 6, "server") == 0 && i + 1 < _strings.size() && _strings[i + 1].compare("{") != 0)
+		{
+			if (_strings[i].compare("server_name") != 0)
+				error_exit("Error syntax!");
+		}
+		if (_strings[i].compare("server") == 0)
+		{
+			i++;
+			while (_strings[i].compare("}") != 0 && i < _strings.size())
+			{
+				if (_strings[i].compare(0, 8, "location") == 0 && i + 2 < _strings.size() && _strings[i + 2].compare("{") != 0)
+					error_exit("Error syntax!");
+				if (_strings[i].compare("location") == 0)
+				{
+					i++;
+					while (_strings[i].compare("}") != 0 && i < _strings.size())
+					{
+						if (_strings[i].compare("server") == 0 || _strings[i].compare("location") == 0)
+							error_exit("Error syntax!");
+						i++;
+					}
+					if (i == _strings.size())
+						error_exit("Error syntax!");
+				}
+				if (_strings[i].compare("server") == 0)
+					error_exit("Error syntax!");
+				i++;
+			}
+			if (_strings[i].compare("}") != 0)
+				error_exit("Error syntax!");
+		}
+	}
 }
 
 std::vector<Server> &Config::getServers()

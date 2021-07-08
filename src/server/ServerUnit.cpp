@@ -1,7 +1,7 @@
 #include "ServerUnit.hpp"
 
-ServerUnit::ServerUnit(Server &serverConfig) : config(serverConfig),
-		port(serverConfig.getPort()), host(serverConfig.getHost())
+ServerUnit::ServerUnit(Server &serverConfig) : port(serverConfig.getPort()),
+host(serverConfig.getHost()), config(serverConfig)
 {
 	initializeSocket();
     std::cout << "host: |" << host << "|\n";
@@ -29,10 +29,12 @@ int	ServerUnit::acceptNewClient()
 	if (clientSocket == -1)
 	{
 		std::cerr << "client socket failed!\n";
+		exit(1);
 	}
 	if (fcntl(clientSocket, F_SETFL, O_NONBLOCK) < 0)
 	{
 		std::cerr << "fcntl error\n";
+		exit(1);
 	}
 	clients.push_back(Client(clientSocket, clientAddr, config));
 	return clientSocket;
@@ -43,20 +45,28 @@ void	ServerUnit::startListening()
 	struct sockaddr_in addr;
 	addr.sin_family = AF_INET;
 	addr.sin_port = htons(port);
-	// addr.sin_addr.s_addr = inet_addr(host.c_str());
-	addr.sin_addr.s_addr = INADDR_ANY;
-    std::cout << "s.addr: " << addr.sin_addr.s_addr << "\n";
-	setsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, &addr, sizeof(addr));
+	addr.sin_addr.s_addr = inet_addr(host.c_str());
+	// addr.sin_addr.s_addr = INADDR_ANY;
+	std::cout << "s.addr: " << addr.sin_addr.s_addr << "\n";
+	if (setsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, &addr, sizeof(addr)) < 0)
+	{
+		std::cerr << "FAIL WHEN SETSOCKOPT\n";
+		exit(1);
+	}
 	if (bind(serverSocket, (sockaddr *)&addr, sizeof(addr)) == -1)
 	{
 		std::cerr << "binding failed!\n";
-        std::cout << strerror(errno) << std::endl;
+		exit(1);
 	}
-	listen(serverSocket, SOMAXCONN);
+	if (listen(serverSocket, SOMAXCONN) < 0)
+	{
+		std::cerr << "LISTEN RETURNED -1\n";
+		exit(1);
+	}
 	std::cout << "Server is listening: " << serverSocket << " socket!\n";
 }
 
-std::vector<Client>	&ServerUnit::getClients()
+std::vector<Client> &ServerUnit::getClients()
 {
 	return clients;
 }

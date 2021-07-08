@@ -14,6 +14,7 @@ private:
 	std::vector<Server>	servers;
 	strVector			_strings;
 	Config(void);
+	void	checkValid(void);
 public:
 	Config(std::string path_to_config);
 	Config(Config const &obj);

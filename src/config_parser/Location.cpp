@@ -17,6 +17,7 @@ Location::Location(strVector strings, size_t start)
 {
 	_strings = strings;
 	_start = start;
+	max_body_size = -1;
 	autoindex = false;
 	redirect = nullptr;
 	setValue();
@@ -49,6 +50,12 @@ void	Location::setValue(void)
 			setTryFiles();
 		if (_strings[_start].compare("root") == 0)
 			setLocRoot();
+		if (_strings[_start].compare("cgi_path") == 0)
+			setCGIPath();
+		if (_strings[_start].compare("max_body_size") == 0)
+			setMaxBodySize();
+		if (_strings[_start].compare("}") == 0)
+			break;
 		_start++;
 	}
 	if (methods.size() == 0)
@@ -66,16 +73,16 @@ void	Location::setLocRoot(void)
 void		Location::setMethods(void)
 {
 	_start++;
-	if (_strings[_start].compare("GET") != 0 && _strings[_start].compare("POST") != 0 && _strings[_start].compare("DELETE") != 0)
+	if (_strings[_start].compare("GET") != 0 && _strings[_start].compare("POST") != 0 && _strings[_start].compare("DELETE") != 0 && _strings[_start].compare("PUT") != 0)
 		error_exit("Methods not set!");
 	for (size_t i = 0; i < _strings.size(); i++)
 	{
-		if (_strings[_start].compare("GET") != 0 && _strings[_start].compare("POST") != 0 && _strings[_start].compare("DELETE") != 0)
+		if (_strings[_start].compare("GET") != 0 && _strings[_start].compare("POST") != 0 && _strings[_start].compare("DELETE") != 0  && _strings[_start].compare("PUT") != 0)
 			break;
 		methods.push_back(_strings[_start]);
 		_start++;
 	}
-	if (methods.size() > 3)
+	if (methods.size() > 4)
 		error_exit("Too many methods!");
 	checkMethods();
 }
@@ -85,11 +92,7 @@ void		Location::setTryFiles(void)
 	_start++;
 	if (_strings[_start][0] != '/')
 		error_exit("Try_files set incorrectly!");
-	// if (uri.compare("/") != 0)
-	// 	try_files = uri + _strings[_start];
-	// else
-		try_files = _strings[_start];
-	// std::cout << try_files << std::endl;
+	try_files = _strings[_start];
 }
 
 void		Location::setRedirect(void)
@@ -104,7 +107,14 @@ void		Location::setRedirect(void)
 	redirect[0] = _strings[_start];
 	_start++;
 	redirect[1] = _strings[_start];
-	// std::cout << redirect[0] + " " + redirect[1] << std::endl;
+}
+
+void		Location::setCGIPath(void)
+{
+	_start++;
+	if (_strings[_start].compare(0, 7, "/Users/") != 0)
+		error_exit("CGI path set incorrectly!");
+	cgi_path = _strings[_start];
 }
 
 void		Location::setAutoindex(void)
@@ -114,6 +124,17 @@ void		Location::setAutoindex(void)
 		error_exit("Autoindex not set!");
 	if (_strings[_start].compare("on") == 0)
 		autoindex = true;
+}
+
+void		Location::setMaxBodySize(void)
+{
+	_start++;
+	for (size_t i = 0; i < _strings[_start].length(); i++)
+	{
+		if (_strings[_start][i] < '0' || _strings[_start][i] > '9')
+			error_exit("Max_body_size set incorrectly!");
+	}
+	std::istringstream(_strings[_start]) >> max_body_size;
 }
 
 strVector	&Location::getMethods(void)
@@ -136,6 +157,11 @@ std::string		&Location::getUri(void)
 	return this->uri;
 }
 
+std::string		&Location::getCGIPath(void)
+{
+	return this->cgi_path;
+}
+
 std::string		&Location::getLocRoot(void)
 {
 	return this->locRoot;
@@ -144,6 +170,11 @@ std::string		&Location::getLocRoot(void)
 std::string		&Location::getTryFiles(void)
 {
 	return this->try_files;
+}
+
+int				Location::getMaxBodySize(void)
+{
+	return this->max_body_size;
 }
 
 void	Location::checkMethods(void)
@@ -158,7 +189,7 @@ void	Location::checkMethods(void)
 		n = i + 1;
 		while (n < len)
 		{
-			if (methods[i] == methods[n])
+			if (methods[i].compare(methods[n]) == 0)
 				error_exit("Some methods are the same!");
 			n++;
 		}

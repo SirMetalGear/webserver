@@ -77,18 +77,12 @@ void	Server::setServerName(void)
 void	Server::setClientMaxBodySize(void)
 {
 	_start++;
-	for (size_t i = 0; i < _strings[_start].length() - 1; i++)
+	for (size_t i = 0; i < _strings[_start].length(); i++)
 	{
 		if (_strings[_start][i] < '0' || _strings[_start][i] > '9')
 			error_exit("Client_max_body_size set incorrectly!");
 	}
-	if (_strings[_start][_strings[_start].length() - 1] != 'M')
-		error_exit("Client_max_body_size set incorrectly!");
-	else
-	{
-		_strings[_start].erase(_strings[_start].end() - 1);
-		std::istringstream(_strings[_start]) >> client_max_body_size;
-	}
+	std::istringstream(_strings[_start]) >> client_max_body_size;
 }
 
 void	Server::setPort(void)
@@ -174,7 +168,7 @@ std::map<std::string, std::string>		&Server::getErrors(void)
 
 void	Server::sortLocations(void)
 {
-	int i = 0;
+	size_t i = 0;
 	Location tmp;
 	while (i + 1 < locations.size())
 	{

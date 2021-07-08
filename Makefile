@@ -12,7 +12,7 @@ CC		= clang++
 
 RM		= rm -f
 
-CFLAGS	= 
+CFLAGS	= -Wall -Wextra -Werror
 
 all:	${NAME}
 
